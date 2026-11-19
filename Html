@@ -1,1 +1,287 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم کلپ سنوکر</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Tahoma, Arial, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #0f4d38, #1a7a5c);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 25px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 22px;
+            margin-bottom: 18px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+        h2 {
+            color: #0f4d38;
+            margin-bottom: 15px;
+            font-size: 17px;
+            border-bottom: 2px solid #28c782;
+            padding-bottom: 6px;
+        }
+        input, button {
+            width: 100%;
+            padding: 11px;
+            margin: 6px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+        button {
+            background: #0f4d38;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #156349;
+        }
+        button.end {
+            background: #e67e22;
+        }
+        button.end:hover {
+            background: #d35400;
+        }
+        button.danger {
+            background: #c0392b;
+        }
+        button.danger:hover {
+            background: #a02f22;
+        }
+        .time-row {
+            display: flex;
+            gap: 10px;
+        }
+        .time-row input {
+            flex: 1;
+        }
+        .receipt {
+            background: #fef9e7;
+            border: 2px solid #f4d03f;
+            border-radius: 6px;
+            padding: 18px;
+            margin-top: 15px;
+            display: none;
+        }
+        .receipt.show {
+            display: block;
+        }
+        .receipt h3 {
+            text-align: center;
+            color: #7d5a00;
+            margin-bottom: 12px;
+        }
+        .receipt p {
+            padding: 4px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        .receipt .total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #c0392b;
+            text-align: center;
+            margin-top: 8px;
+            border: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        th, td {
+            padding: 9px 5px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        th {
+            background: #0f4d38;
+            color: white;
+        }
+        .price-note {
+            background: #e8f8f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎱 سیستم کلپ سنوکر</h1>
 
+        <!-- 💰 اطلاعات قیمت -->
+        <div class="card">
+            <div class="price-note">
+                <strong>نرخ:</strong> ۱۵۰ افغانی در ساعت &nbsp;|&nbsp;
+                <strong>هر دقیقه:</strong> ۲.۵ افغانی
+            </div>
+        </div>
+
+        <!-- 📝 ثبت بازی جدید -->
+        <div class="card">
+            <h2>📝 ثبت بازی</h2>
+            <input type="text" id="customerName" placeholder="نام مشتری">
+            
+            <div class="time-row">
+                <input type="time" id="startTime" placeholder="ساعت شروع">
+                <button onclick="setStartNow()">همین الان شروع</button>
+            </div>
+            
+            <div class="time-row">
+                <input type="time" id="endTime" placeholder="ساعت پایان">
+                <button onclick="setEndNow()">همین الان ختم</button>
+            </div>
+            
+            <button onclick="calculateAndSave()">✅ محاسبه و ثبت</button>
+
+            <!-- 🧾 فاکتور -->
+            <div class="receipt" id="receipt">
+                <h3>🧾 فاکتور</h3>
+                <p><strong>نام مشتری:</strong> <span id="rName"></span></p>
+                <p><strong>ساعت شروع:</strong> <span id="rStart"></span></p>
+                <p><strong>ساعت پایان:</strong> <span id="rEnd"></span></p>
+                <p><strong>مدت زمان:</strong> <span id="rDuration"></span> دقیقه</p>
+                <p class="total">💰 مقدار پول: <span id="rCost"></span> افغانی</p>
+            </div>
+        </div>
+
+        <!-- 📋 لیست همه بازی‌ها -->
+        <div class="card">
+            <h2>📋 لیست بازی‌ها</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>مشتری</th>
+                        <th>شروع</th>
+                        <th>پایان</th>
+                        <th>دقیقه</th>
+                        <th>هزینه</th>
+                    </tr>
+                </thead>
+                <tbody id="gamesList">
+                    <tr><td colspan="6" style="padding:20px; color:#888;">هنوز بازی ثبت نشده</td></tr>
+                </tbody>
+            </table>
+            <br>
+            <button class="danger" onclick="clearAll()">پاک کردن همه</button>
+        </div>
+    </div>
+
+    <script>
+        let games = JSON.parse(localStorage.getItem('snookerGames') || '[]');
+
+        function saveGames() {
+            localStorage.setItem('snookerGames', JSON.stringify(games));
+            renderGames();
+        }
+
+        function getCurrentTime() {
+            const d = new Date();
+            return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+        }
+
+        function setStartNow() {
+            document.getElementById('startTime').value = getCurrentTime();
+        }
+
+        function setEndNow() {
+            document.getElementById('endTime').value = getCurrentTime();
+        }
+
+        function calculateCost(minutes) {
+            return +(minutes * 2.5).toFixed(1);
+        }
+
+        function calculateAndSave() {
+            const name = document.getElementById('customerName').value.trim();
+            const start = document.getElementById('startTime').value;
+            const end = document.getElementById('endTime').value;
+
+            if (!name) { alert('❌ نام مشتری را بنویسید!'); return; }
+            if (!start || !end) { alert('❌ ساعت شروع و پایان را مشخص کنید!'); return; }
+
+            const [h1, m1] = start.split(':').map(Number);
+            const [h2, m2] = end.split(':').map(Number);
+            
+            let minutes = (h2 * 60 + m2) - (h1 * 60 + m1);
+            if (minutes <= 0) {
+                alert('❌ ساعت پایان باید بعد از شروع باشد!');
+                return;
+            }
+            
+            const cost = calculateCost(minutes);
+            const newId = games.length ? games[0].id + 1 : 1;
+
+            const game = { id: newId, name, start, end, minutes, cost };
+            games.unshift(game);
+            saveGames();
+
+            // نمایش فاکتور
+            document.getElementById('rName').textContent = name;
+            document.getElementById('rStart').textContent = start;
+            document.getElementById('rEnd').textContent = end;
+            document.getElementById('rDuration').textContent = minutes;
+            document.getElementById('rCost').textContent = cost;
+            document.getElementById('receipt').classList.add('show');
+
+            // خالی کردن فرم
+            document.getElementById('customerName').value = '';
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
+        }
+
+        function renderGames() {
+            const list = document.getElementById('gamesList');
+            if (games.length === 0) {
+                list.innerHTML = '<tr><td colspan="6" style="padding:20px; color:#888;">هنوز بازی ثبت نشده</td></tr>';
+                return;
+            }
+            list.innerHTML = games.map(g => `
+                <tr>
+                    <td>${g.id}</td>
+                    <td>${g.name}</td>
+                    <td>${g.start}</td>
+                    <td>${g.end}</td>
+                    <td>${g.minutes}</td>
+                    <td>${g.cost} اف</td>
+                </tr>
+            `).join('');
+        }
+
+        function clearAll() {
+            if (confirm('⚠️ مطمئن هستید همه بازی‌ها پاک شود؟')) {
+                games = [];
+                saveGames();
+                document.getElementById('receipt').classList.remove('show');
+            }
+        }
+
+        renderGames();
+    </script>
+</body>
+</html>
